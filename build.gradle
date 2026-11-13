@@ -1,18 +1,48 @@
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version '1.14.0'
+    id 'fabric-loom' version '1.14-SNAPSHOT'
     id 'maven-publish'
 }
-version = '1.0.0'
-group = 'tb'
-base { archivesName = 'triggerbot' }
-repositories { mavenCentral() }
-dependencies {
-    minecraft "com.mojang:minecraft:1.21.11"
-    mappings "net.fabricmc:yarn:1.21.11+build.1:v2"
-    modImplementation "net.fabricmc:fabric-loader:0.19.5"
-    modImplementation "net.fabricmc:fabric-api:0.115.0+1.21.11"
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
 }
+
+repositories {
+    // Add repositories here if needed
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Add your mod dependencies here if needed
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archives_base_name}" }
+    }
 }
