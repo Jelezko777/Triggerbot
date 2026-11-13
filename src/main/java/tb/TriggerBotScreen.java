@@ -18,7 +18,6 @@ public class TriggerBotScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        // Кнопка включения/выключения TriggerBot
         this.addDrawableChild(ButtonWidget.builder(
                 Text.literal("TriggerBot: " + (TriggerBotConfig.enabled ? "§aON" : "§cOFF")),
                 button -> {
@@ -28,7 +27,6 @@ public class TriggerBotScreen extends Screen {
                 .dimensions(centerX - 100, centerY - 40, 200, 20)
                 .build());
 
-        // Кнопка настройки W-Tap (сброс шифта перед ударом)
         this.addDrawableChild(ButtonWidget.builder(
                 Text.literal("Smart Shift Reset: " + (TriggerBotConfig.smartShift ? "§aON" : "§cOFF")),
                 button -> {
@@ -38,7 +36,6 @@ public class TriggerBotScreen extends Screen {
                 .dimensions(centerX - 100, centerY - 10, 200, 20)
                 .build());
 
-        // Кнопка закрытия / возврата
         this.addDrawableChild(ButtonWidget.builder(
                 Text.literal("Done"),
                 button -> this.client.setScreen(this.parent))
