@@ -11,7 +11,8 @@ base {
 }
 
 repositories {
-    // Репозитории для зависимостей
+    mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
 }
 
 dependencies {
