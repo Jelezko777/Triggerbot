@@ -23,7 +23,7 @@ public class TriggerBot implements ClientModInitializer {
                 "key.triggerbot.menu",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_ALT,
-                "category.triggerbot"
+                KeyBinding.MISCELLANEOUS_CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
