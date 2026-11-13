@@ -18,11 +18,11 @@ public class TriggerBot implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // Регистрация клавиши открытия меню (Правый Shift)
+        // Регистрация клавиши открытия меню (Правый Alt)
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.triggerbot.menu",
-                InputUtil.Type.KEY_SYM,
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_ALT,
                 "category.triggerbot"
         ));
 
@@ -42,11 +42,11 @@ public class TriggerBot implements ClientModInitializer {
                 Entity target = ((EntityHitResult) hit).getEntity();
 
                 if (target instanceof LivingEntity && target.isAlive()) {
-                    // Логика Smart Shift (сброс шифта перед ударом для макс. кнука / урона)
+                    // Логика Smart Shift (сброс шифта перед ударом для макс. урона / отброса)
                     if (TriggerBotConfig.smartShift && client.player.isSneaking()) {
                         client.player.setSneaking(false);
                         isUnshiftedForAttack = true;
-                        shiftTicks = 2; // Возвращаем шифты через 2 тика
+                        shiftTicks = 2; // Возвращаем шифт обратно через 2 тика
                     }
 
                     // Симулируем удар (левый клик)
@@ -57,7 +57,7 @@ public class TriggerBot implements ClientModInitializer {
                 }
             }
 
-            // Возвращаем шифт обратно после сброса
+            // Возвращаем шифт обратно после удара
             if (isUnshiftedForAttack) {
                 if (shiftTicks > 0) {
                     shiftTicks--;
