@@ -18,38 +18,36 @@ public class TriggerBot implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // Регистрация клавиши открытия меню (Правый Alt) с помощью безопасного конструктора без категории
+        // Чистая регистрация клавиши (Правый Alt) без лишних аргументов категорий
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.triggerbot.menu",
                 InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_RIGHT_ALT,
-                "key.categories.misc" // Если этот конструктор требует строку в конце — она здесь, но если это перегрузка без категории, используем короткий вариант:
+                GLFW.GLFW_KEY_RIGHT_ALT
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.world == null) return;
 
-            // Открытие меню по нажатию клавиши
+            // Открытие меню по Правому Alt
             while (menuKey.wasPressed()) {
                 client.setScreen(new TriggerBotScreen(client.currentScreen));
             }
 
             if (!TriggerBotConfig.enabled) return;
 
-            // Проверяем, кто находится под прицелом
             HitResult hit = client.crosshairTarget;
             if (hit != null && hit.getType() == HitResult.Type.ENTITY) {
                 Entity target = ((EntityHitResult) hit).getEntity();
 
                 if (target instanceof LivingEntity && target.isAlive()) {
-                    // Логика Smart Shift (сброс шифта перед ударом для макс. урона / отброса)
+                    // Smart Shift (W-Tap / Сброс шифта перед ударом для макс. отброса)
                     if (TriggerBotConfig.smartShift && client.player.isSneaking()) {
                         client.player.setSneaking(false);
                         isUnshiftedForAttack = true;
-                        shiftTicks = 2; // Возвращаем шифт обратно через 2 тика
+                        shiftTicks = 2;
                     }
 
-                    // Симулируем удар (левый клик)
+                    // Атака с проверкой кулдауна
                     if (client.interactionManager != null && client.player.getAttackCooldownProgress(0.5f) >= 1.0f) {
                         client.interactionManager.attackEntity(client.player, target);
                         client.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
@@ -57,7 +55,7 @@ public class TriggerBot implements ClientModInitializer {
                 }
             }
 
-            // Возвращаем шифт обратно после удара
+            // Возврат шифта на место
             if (isUnshiftedForAttack) {
                 if (shiftTicks > 0) {
                     shiftTicks--;
