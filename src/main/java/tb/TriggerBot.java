@@ -18,11 +18,11 @@ public class TriggerBot implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // Чистая регистрация клавиши (Правый Alt) без лишних аргументов категорий
+        // Регистрация клавиши через правильную сигнатуру (без лишнего Type)
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.triggerbot.menu",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_RIGHT_ALT
+                GLFW.GLFW_KEY_RIGHT_ALT,
+                "key.categories.misc"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
