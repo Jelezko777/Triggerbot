@@ -2,41 +2,70 @@ package tb;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
-import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.util.hit.HitResult;
+import org.lwjgl.glfw.GLFW;
 
 public class TriggerBot implements ClientModInitializer {
-    private long nextAttackTime = 0L;
+    private static KeyBinding menuKey;
+    private int shiftTicks = 0;
+    private boolean isUnshiftedForAttack = false;
 
     @Override
     public void onInitializeClient() {
+        // Регистрация клавиши открытия меню (Правый Shift)
+        menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.triggerbot.menu",
+                InputUtil.Type.KEY_SYM,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                "category.triggerbot"
+        ));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            ClientPlayerEntity player = client.player;
-            if (player == null || client.interactionManager == null || client.currentScreen != null) return;
-            if (!(client.crosshairTarget instanceof EntityHitResult hitResult)
-                    || !(hitResult.getEntity() instanceof LivingEntity target) || !target.isAlive()) return;
-            long now = System.currentTimeMillis();
-            if (now < nextAttackTime) return;
-            if (canCrit(player)) {
-                client.interactionManager.attackEntity(player, target);
-                player.swingHand(Hand.MAIN_HAND);
-                nextAttackTime = now + ThreadLocalRandom.current().nextLong(50, 121);
+            if (client.player == null || client.world == null) return;
+
+            // Открытие меню по нажатию клавиши
+            while (menuKey.wasPressed()) {
+                client.setScreen(new TriggerBotScreen(client.currentScreen));
+            }
+
+            if (!TriggerBotConfig.enabled) return;
+
+            // Проверяем, кто находится под прицелом
+            HitResult hit = client.crosshairTarget;
+            if (hit != null && hit.getType() == HitResult.Type.ENTITY) {
+                Entity target = ((EntityHitResult) hit).getEntity();
+
+                if (target instanceof LivingEntity && target.isAlive()) {
+                    // Логика Smart Shift (сброс шифта перед ударом для макс. кнука / урона)
+                    if (TriggerBotConfig.smartShift && client.player.isSneaking()) {
+                        client.player.setSneaking(false);
+                        isUnshiftedForAttack = true;
+                        shiftTicks = 2; // Возвращаем шифты через 2 тика
+                    }
+
+                    // Симулируем удар (левый клик)
+                    if (client.interactionManager != null && client.player.getAttackCooldownProgress(0.5f) >= 1.0f) {
+                        client.interactionManager.attackEntity(client.player, target);
+                        client.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+                    }
+                }
+            }
+
+            // Возвращаем шифт обратно после сброса
+            if (isUnshiftedForAttack) {
+                if (shiftTicks > 0) {
+                    shiftTicks--;
+                } else {
+                    client.player.setSneaking(true);
+                    isUnshiftedForAttack = false;
+                }
             }
         });
-    }
-
-    private boolean canCrit(ClientPlayerEntity player) {
-        return player.getAttackCooldownProgress(0.5F) >= 0.9F
-                && player.fallDistance > 0.0F
-                && !player.isOnGround()
-                && !player.isClimbing()
-                && !player.isTouchingWater()
-                && !player.hasStatusEffect(StatusEffects.BLINDNESS)
-                && !player.hasVehicle()
-                && !player.isSprinting();
     }
 }
